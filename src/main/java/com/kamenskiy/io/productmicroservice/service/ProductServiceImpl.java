@@ -36,6 +36,7 @@ public class ProductServiceImpl implements ProductService {
            } else
                 LOGGER.info("Message send successfully: {}", result.getRecordMetadata());
         });
+        future.join();
         LOGGER.info("Return productId: {}", productId);
         return productId;
     }
