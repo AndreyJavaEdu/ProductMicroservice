@@ -9,7 +9,7 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -21,22 +21,18 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String createProduct(CreateProductDto productDto) {
+    public String createProduct(CreateProductDto productDto) throws ExecutionException, InterruptedException {
         //TODO save to DB
         String productId = UUID.randomUUID().toString();
 
         ProductCreatedEvent event = new ProductCreatedEvent(productId, productDto.getTitle(), productDto.getPrice(),
                 productDto.getQuantity());
-        CompletableFuture<SendResult<String, ProductCreatedEvent>> future = kafkaTemplate
-                .send("product-created-events-topic", productId, event);
+        SendResult<String, ProductCreatedEvent> result = kafkaTemplate
+                .send("product-created-events-topic", productId, event).get();
+        LOGGER.info("topic: {}", result.getRecordMetadata().topic());
+        LOGGER.info("partition: {}", result.getRecordMetadata().partition());
+        LOGGER.info("Offset: {}", result.getRecordMetadata().offset());
 
-        future.whenComplete((result, exception) ->{
-           if (exception != null) {
-               LOGGER.error("Failed to send message: {}", exception.getMessage());
-           } else
-                LOGGER.info("Message send successfully: {}", result.getRecordMetadata());
-        });
-        future.join();
         LOGGER.info("Return productId: {}", productId);
         return productId;
     }
