@@ -29,6 +29,8 @@ public class ProductServiceImpl implements ProductService {
                 productDto.getQuantity());
         SendResult<String, ProductCreatedEvent> result = kafkaTemplate
                 .send("product-created-events-topic", productId, event).get();
+        LOGGER.info(String.valueOf(kafkaTemplate
+                .send("product-created-events-topic", productId, event)));
         LOGGER.info("topic: {}", result.getRecordMetadata().topic());
         LOGGER.info("partition: {}", result.getRecordMetadata().partition());
         LOGGER.info("Offset: {}", result.getRecordMetadata().offset());
